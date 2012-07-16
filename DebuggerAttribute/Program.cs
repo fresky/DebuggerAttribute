@@ -2,7 +2,16 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Text;
+using DebuggerAttribute;
+using Microsoft.VisualStudio.DebuggerVisualizers;
+
+[assembly: System.Diagnostics.DebuggerVisualizer(
+typeof(DebuggerAttribute.UserDebuggerVisualizer),
+typeof(VisualizerObjectSource),
+Target = typeof(User),
+Description = "User Debugger Visualizer")]
 
 namespace DebuggerAttribute
 {
@@ -16,6 +25,7 @@ namespace DebuggerAttribute
                     Title = "Developer",
                     Email = "dawei.xu@gmail.com",
                     Address = Convert.ToBase64String(Encoding.ASCII.GetBytes("China")),
+                    Picture = Image.FromFile(@"..\..\Penguins.jpg"),
                 };
             developer.AddSkill("C#");
             developer.AddSkill("C++");
@@ -30,6 +40,8 @@ namespace DebuggerAttribute
 
     [DebuggerTypeProxy(typeof(UserProxy))]
     [DebuggerDisplay("{Name} has {GetSkills().Count} skills!")]
+    [DebuggerVisualizer(typeof(UserDebuggerVisualizer))]
+    [Serializable]
     public class User
     {
         public string Name { get; set; }
@@ -37,6 +49,8 @@ namespace DebuggerAttribute
         public string Email { get; set; }
         public string Address { get; set; }
         private readonly List<string> m_Skills = new List<string>();
+        public Image Picture { get; set; }
+
 
         [DebuggerStepThrough]
         public string GetBussinessCard()
@@ -107,6 +121,16 @@ namespace DebuggerAttribute
         private string GetPlainAddress(string pwd)
         {
             return Encoding.ASCII.GetString(Convert.FromBase64String(pwd));
+        }
+    }
+
+    public class UserDebuggerVisualizer : DialogDebuggerVisualizer
+    {
+        protected override void Show(IDialogVisualizerService windowService, IVisualizerObjectProvider objectProvider)
+        {
+            User usr = (User)objectProvider.GetObject();
+            UserDebugViewer form = new UserDebugViewer(usr);
+            windowService.ShowDialog(form);
         }
     }
 }
